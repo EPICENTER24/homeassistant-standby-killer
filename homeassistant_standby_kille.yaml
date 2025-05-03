@@ -1,0 +1,108 @@
+
+blueprint:
+  name: 💡 Standby-Killer für Steckdosen (mit Steuerung & Schutz)
+  description: >
+    Version: 1.0  
+    Erstellt: Mai 2025  
+    Autor: Martin & ChatGPT  
+
+    💡 Automatisches Abschalten einer Steckdose, wenn der Stromverbrauch längere Zeit unter einem frei definierbaren Schwellenwert liegt.
+
+    ✅ Ideal für TV, Hi-Fi, Drucker usw.  
+    ✅ Wartezeit zwischen 1 und 24 Stunden frei einstellbar  
+    ✅ Schützt vor Sensorfehlern (z. B. "unavailable")  
+    ✅ Kann mit zwei Helfern aktiviert/deaktiviert oder auf Dauerbetrieb gestellt werden
+
+    ---
+    ⚙️ Verwendet:
+    - `input_boolean.standby_killer_aktiv`
+    - `input_boolean.dauerbetrieb_aktiv`
+    - Sensor mit Verbrauch in Watt
+    - Schaltbare Steckdose
+    ---
+
+    Änderungen:
+    - v1.0: Erste Version mit vollständiger Steuerlogik und Zeit-Schieberegler
+
+  domain: automation
+  input:
+    power_sensor:
+      name: 🔌 Verbrauchssensor
+      description: Wähle den Sensor aus, der den Stromverbrauch misst (z. B. sensor.tv_power).
+      selector:
+        entity:
+          domain: sensor
+
+    plug_switch:
+      name: 🧠 Steckdose
+      description: Wähle die Steckdose, die automatisch ausgeschaltet werden soll.
+      selector:
+        entity:
+          domain: switch
+
+    watt_threshold:
+      name: ⚡ Verbrauchs-Schwelle in Watt
+      description: Wenn der Verbrauch unter diesem Wert bleibt, wird nach Ablauf der Wartezeit abgeschaltet.
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 50
+          unit_of_measurement: W
+          step: 0.1
+          mode: slider
+
+    wait_hours:
+      name: ⏳ Wartezeit (bis zur Abschaltung)
+      description: So lange muss der Verbrauch unter der Schwelle bleiben, bevor abgeschaltet wird.
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 24
+          step: 0.25
+          unit_of_measurement: h
+          mode: slider
+
+    aktiv_schalter:
+      name: ✅ Standby-Killer EIN/AUS (Helfer)
+      description: Umschalter, um die Automation generell zu aktivieren oder zu deaktivieren.
+      selector:
+        entity:
+          domain: input_boolean
+
+    dauerbetrieb_schalter:
+      name: ❌ Dauerbetrieb aktiv (Helfer)
+      description: Wenn dieser Umschalter aktiv ist, wird **nie** abgeschaltet – unabhängig vom Verbrauch.
+      selector:
+        entity:
+          domain: input_boolean
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input power_sensor
+    below: !input.watt_threshold
+    for:
+      hours: "{{ (int(!input.wait_hours)) }}"
+      minutes: "{{ ((float(!input.wait_hours) % 1) * 60) | round(0) }}"
+
+condition:
+  - condition: template
+    value_template: >
+      {{ states(!input.power_sensor) not in ['unavailable', 'unknown'] }}
+  - condition: state
+    entity_id: !input.plug_switch
+    state: "on"
+  - condition: state
+    entity_id: !input.aktiv_schalter
+    state: "on"
+  - condition: state
+    entity_id: !input.dauerbetrieb_schalter
+    state: "off"
+
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: !input.plug_switch
+
+mode: single
