@@ -2,7 +2,7 @@
 # 💡 Standby-Killer für Steckdosen (Blueprint)
 
 **Version:** 1.0  
-**Autor:** Martin 
+**Autor:** Martin
 **Erstellt:** Mai 2025  
 
 Dieser Home Assistant Blueprint schaltet eine smarte Steckdose automatisch aus, wenn der Stromverbrauch über eine frei definierbare Zeit unter einen bestimmten Schwellenwert fällt.
