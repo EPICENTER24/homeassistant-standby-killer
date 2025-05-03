@@ -1,7 +1,7 @@
 blueprint:
   name: 💡 Standby-Killer für Steckdosen (mit optionaler Deaktivierung)
   description: >
-    Version: 1.1 (korrigiert)  
+    Version: 1.1.1 (bereinigt)  
     Erstellt: Mai 2025  
     Autor: Martin
 
@@ -74,9 +74,6 @@ trigger:
     for: !input wait_time
 
 condition:
-  - condition: template
-    value_template: >
-      {{ states(!input.power_sensor) not in ['unavailable', 'unknown'] }}
   - condition: state
     entity_id: !input plug_switch
     state: "on"
