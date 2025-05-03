@@ -1,65 +1,55 @@
 blueprint:
-  name: 💡 Standby-Killer für Steckdosen (mit optionaler Deaktivierung)
+  name: 💡 Standby-Killer für Steckdosen (optional abschaltbar)
   description: >
-    Version: 1.1.4  
+    Version: 1.2.0  
     Erstellt: Mai 2025  
-    Autor: Martin
+    Autor: Martin  
 
-    💡 Automatisches Abschalten einer Steckdose, wenn der Stromverbrauch längere Zeit unter einem frei definierbaren Schwellenwert liegt.
+    💡 Automatisches Abschalten einer Steckdose bei dauerhaft niedrigem Stromverbrauch.
 
-    ✅ Ideal für TV, Hi-Fi, Drucker usw.  
-    ✅ Wartezeit zwischen 1 Minute und 24 Stunden frei einstellbar  
-    ✅ Schützt vor Sensorfehlern (z. B. "unavailable")  
-    ✅ Optional abschaltbar über einen Umschalter „Standby-Killer AUS“
-
-    ---
-    ⚙️ Verwendet:
-    - (optional) `input_boolean.standby_killer_aus`
-    - Sensor mit Verbrauch in Watt
-    - Schaltbare Steckdose
-    ---
+    ✅ Ideal für TV, Hi-Fi, Drucker  
+    ✅ Schwellwert in ganzen Watt (max. 100 W)  
+    ✅ Einstellbare Wartezeit (1 Min. – 24 Std.)  
+    ✅ Optional deaktivierbar (Standby-Killer AUS)  
 
     Änderungen:
-    - v1.1.2: Alle !input-Fehler korrigiert, sichere Blueprint-Logik umgesetzt
+    - v1.2.0: Fehlerfreie YAML- & Jinja-Logik implementiert
 
   domain: automation
   input:
     power_sensor:
       name: 🔌 Verbrauchssensor
-      description: Wähle den Sensor aus, der den Stromverbrauch misst (z. B. sensor.tv_power).
       selector:
         entity:
           domain: sensor
 
     plug_switch:
       name: 🧠 Steckdose
-      description: Wähle die Steckdose, die automatisch ausgeschaltet werden soll.
       selector:
         entity:
           domain: switch
 
     watt_threshold:
-      name: ⚡ Verbrauchs-Schwelle in Watt
-      description: Wenn der Verbrauch unter diesem Wert bleibt, wird nach Ablauf der Wartezeit abgeschaltet.
+      name: ⚡ Verbrauchsschwelle (Watt)
       default: 5
       selector:
         number:
           min: 0
           max: 100
-          unit_of_measurement: W
           step: 1
+          unit_of_measurement: W
           mode: slider
 
     wait_time:
-      name: ⏳ Wartezeit (bis zur Abschaltung)
-      description: So lange muss der Verbrauch unter der Schwelle bleiben, bevor abgeschaltet wird.
+      name: ⏳ Wartezeit
       default: "02:00:00"
       selector:
         duration:
 
     abschalt_sperre:
       name: 🚫 Standby-Killer AUS (optional)
-      description: Wenn dieser Umschalter auf AN steht, wird **keine** Abschaltung vorgenommen.
+      description: >
+        Optionaler Schalter: Wenn auf AN, keine automatische Abschaltung.
       default: ""
       selector:
         entity:
@@ -80,13 +70,9 @@ condition:
 action:
   - choose:
       - conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: '{{ not ("abschalt_sperre" in inputs) }}'
-              - condition: state
-                entity_id: !input abschalt_sperre
-                state: "off"
+          - condition: template
+            value_template: >
+              {{ inputs.get('abschalt_sperre') in [none, ''] or is_state(inputs.get('abschalt_sperre'), 'off') }}
         sequence:
           - service: switch.turn_off
             target:
