@@ -1,27 +1,26 @@
 blueprint:
-  name: 💡 Standby-Killer für Steckdosen (mit Steuerung & Schutz)
+  name: 💡 Standby-Killer für Steckdosen (mit optionaler Deaktivierung)
   description: >
-    Version: 1.0  
+    Version: 1.1  
     Erstellt: Mai 2025  
-    Autor: Martin  
+    Autor: Martin
 
     💡 Automatisches Abschalten einer Steckdose, wenn der Stromverbrauch längere Zeit unter einem frei definierbaren Schwellenwert liegt.
 
     ✅ Ideal für TV, Hi-Fi, Drucker usw.  
     ✅ Wartezeit zwischen 1 Minute und 24 Stunden frei einstellbar  
     ✅ Schützt vor Sensorfehlern (z. B. "unavailable")  
-    ✅ Kann mit zwei Helfern aktiviert/deaktiviert oder auf Dauerbetrieb gestellt werden
+    ✅ Optional abschaltbar über einen Umschalter „Standby-Killer AUS“
 
     ---
     ⚙️ Verwendet:
-    - `input_boolean.standby_killer_aktiv`
-    - `input_boolean.dauerbetrieb_aktiv`
+    - (optional) `input_boolean.standby_killer_aus`
     - Sensor mit Verbrauch in Watt
     - Schaltbare Steckdose
     ---
 
     Änderungen:
-    - v1.0: Erste Version mit vollständiger Steuerlogik und Dauerfeld
+    - v1.1: Optionaler Deaktivierungsschalter, Dauerbetrieb entfernt
 
   domain: automation
   input:
@@ -58,19 +57,15 @@ blueprint:
       selector:
         duration:
 
-    aktiv_schalter:
-      name: ✅ Standby-Killer EIN/AUS (Helfer)
-      description: Umschalter, um die Automation generell zu aktivieren oder zu deaktivieren.
+    abschalt_sperre:
+      name: 🚫 Standby-Killer AUS (optional)
+      description: Wenn dieser Umschalter auf AN steht, wird **keine** Abschaltung vorgenommen.
+      default: ""
       selector:
         entity:
           domain: input_boolean
-
-    dauerbetrieb_schalter:
-      name: ❌ Dauerbetrieb aktiv (Helfer)
-      description: Wenn dieser Umschalter aktiv ist, wird **nie** abgeschaltet – unabhängig vom Verbrauch.
-      selector:
-        entity:
-          domain: input_boolean
+          multiple: false
+          include_entities: true
 
 trigger:
   - platform: numeric_state
@@ -85,12 +80,13 @@ condition:
   - condition: state
     entity_id: !input plug_switch
     state: "on"
-  - condition: state
-    entity_id: !input aktiv_schalter
-    state: "on"
-  - condition: state
-    entity_id: !input dauerbetrieb_schalter
-    state: "off"
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: "{{ !input.abschalt_sperre == '' }}"
+      - condition: state
+        entity_id: !input abschalt_sperre
+        state: "off"
 
 action:
   - service: switch.turn_off
