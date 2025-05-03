@@ -1,7 +1,7 @@
 blueprint:
   name: 💡 Standby-Killer für Steckdosen (mit optionaler Deaktivierung)
   description: >
-    Version: 1.1.2  
+    Version: 1.1.4  
     Erstellt: Mai 2025  
     Autor: Martin
 
@@ -45,9 +45,9 @@ blueprint:
       selector:
         number:
           min: 0
-          max: 50
+          max: 100
           unit_of_measurement: W
-          step: 0.1
+          step: 1
           mode: slider
 
     wait_time:
@@ -83,7 +83,7 @@ action:
           - condition: or
             conditions:
               - condition: template
-                value_template: "{{ not ("abschalt_sperre" in inputs) }}"
+                value_template: '{{ not ("abschalt_sperre" in inputs) }}'
               - condition: state
                 entity_id: !input abschalt_sperre
                 state: "off"
