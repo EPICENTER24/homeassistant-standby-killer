@@ -45,9 +45,7 @@ action:
   - service: logbook.log
     data:
       name: "Standby-Killer"
-      message: >
-        Verbrauch unter {{ states(!input power_sensor) }} W –
-        schalte {{ states(!input plug_switch).name }} aus
+      message: "Verbrauch unter Schwelle – Steckdose wird ausgeschaltet."
   - service: switch.turn_off
     target:
       entity_id: !input plug_switch
