@@ -1,5 +1,5 @@
 blueprint:
-  name: ⚡ Standby-Killer mit Abschalt-Helfer
+  name: ⚡ Standby-Killer mit Abschalt-Helfer (korrigiert)
   description: >
     Schaltet eine Steckdose aus, wenn ein Leistungssensor für eine definierte Zeit
     unter einem Schwellwert liegt. Mit optionalem Abschalt-Helfer (input_boolean).
@@ -52,9 +52,11 @@ condition:
   - condition: or
     conditions:
       - condition: template
-        value_template: "{{ not (inputs.abschalt_sperre) }}"
-      - condition: template
-        value_template: "{{ is_state(inputs.abschalt_sperre, 'off') }}"
+        value_template: >
+          {{ inputs.abschalt_sperre == '' }}
+      - condition: state
+        entity_id: !input abschalt_sperre
+        state: "off"
 
 action:
   - service: logbook.log
