@@ -1,10 +1,28 @@
 blueprint:
-  name: ⚡ Standby-Killer mit optionalem Abschalt-Helfer (stabil)
+  name: ⚡ Einfacher Standby-Killer
   description: >
-    Schaltet eine Steckdose aus, wenn ein Leistungssensor für eine definierte Zeit
-    unter einem Schwellwert liegt. Optional deaktivierbar über einen Helfer (input_boolean).
+    🧠 Version: 1.0  
+    📅 Erstellt: Mai 2025  
+    ✍️ Autor: Martin
+
+    💡 Beschreibung:
+    Diese Automation schaltet eine Steckdose automatisch aus,
+    wenn der zugehörige Verbrauchssensor über eine bestimmte Dauer
+    unterhalb einer definierten Watt-Schwelle liegt.
+
+    ✅ Ideal für Fernseher, Drucker, Soundsysteme u. ä.  
+    ✅ Einfach zu konfigurieren  
+    ✅ Funktioniert ohne zusätzliche Helfer oder Bedingungstricks  
+    ✅ Übersichtliche Logmeldung im Logbuch bei Auslösung
+
+    Eingabefelder:
+    - Verbrauchssensor: Sensor, der Leistung in Watt liefert (z. B. Shelly, Gosund, Homematic)
+    - Steckdose: Die zu schaltende Steckdose
+    - Verbrauchsschwelle: Grenzwert in Watt (Standard: 10 W)
+    - Wartezeit: Wie lange der Wert unterhalb der Schwelle bleiben muss
 
   domain: automation
+
   input:
     power_sensor:
       name: Verbrauchssensor (Watt)
@@ -30,14 +48,6 @@ blueprint:
       default: "00:00:20"
       selector:
         duration:
-    abschalt_sperre:
-      name: Standby-Killer AUS (optional)
-      description: Wenn dieser Schalter auf AN steht, wird nicht abgeschaltet.
-      default: ""
-      selector:
-        entity:
-          domain: input_boolean
-          multiple: false
 
 trigger:
   - platform: numeric_state
@@ -49,10 +59,6 @@ condition:
   - condition: state
     entity_id: !input plug_switch
     state: "on"
-  - condition: template
-    value_template: >
-      {% set helper = inputs.get('abschalt_sperre') %}
-      {{ helper in [none, ''] or is_state(helper, 'off') }}
 
 action:
   - service: logbook.log
